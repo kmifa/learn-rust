@@ -34,6 +34,7 @@ mod tests {
     #[test]
     fn test_equality() {
         assert!(Doller::new(5).equals(Doller::new(5)));
+        // falseを評価したい場合はassert!マクロに渡す前に反転させる必要がある
         assert!(!Doller::new(5).equals(Doller::new(6)));
     }
 }
