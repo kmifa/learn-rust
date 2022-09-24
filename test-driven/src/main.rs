@@ -15,6 +15,23 @@ impl Doller {
     }
 }
 
+#[derive(Debug, PartialEq)]
+struct Franc {
+    amount: i32,
+}
+
+impl Franc {
+    fn new(amount: i32) -> Franc {
+        Franc { amount }
+    }
+    fn times(&mut self, multiplier: i32) -> Franc {
+        return Franc::new(self.amount * multiplier);
+    }
+    fn equals(&self, franc: Franc) -> bool {
+        return self.amount == franc.amount;
+    }
+}
+
 fn main() {
     println!("{}", 1);
 }
@@ -35,5 +52,12 @@ mod tests {
         assert!(Doller::new(5).equals(Doller::new(5)));
         // falseを評価したい場合はassert!マクロに渡す前に反転させる必要がある
         assert!(!Doller::new(5).equals(Doller::new(6)));
+    }
+
+    #[test]
+    fn test_franc_multiplication() {
+        let mut five = Franc::new(5);
+        assert_eq!(Franc::new(10), five.times(2));
+        assert_eq!(Franc::new(15), five.times(3));
     }
 }
