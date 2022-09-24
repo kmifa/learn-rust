@@ -1,3 +1,4 @@
+#[derive(Debug, PartialEq)]
 struct Doller {
     amount: i32,
 }
@@ -25,10 +26,8 @@ mod tests {
     #[test]
     fn test_multiplication() {
         let mut five = Doller::new(5);
-        let mut product = five.times(2);
-        assert_eq!(10, product.amount);
-        product = five.times(3);
-        assert_eq!(15, product.amount);
+        assert_eq!(Doller::new(10), five.times(2));
+        assert_eq!(Doller::new(15), five.times(3));
     }
 
     #[test]
