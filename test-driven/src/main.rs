@@ -9,6 +9,9 @@ impl Doller {
     fn times(&mut self, multiplier: i32) -> Doller {
         return Doller::new(self.amount * multiplier);
     }
+    fn equals(&self, doller: Doller) -> bool {
+        return self.amount == doller.amount;
+    }
 }
 
 fn main() {
@@ -26,5 +29,11 @@ mod tests {
         assert_eq!(10, product.amount);
         product = five.times(3);
         assert_eq!(15, product.amount);
+    }
+
+    #[test]
+    fn test_equality() {
+        assert!(Doller::new(5).equals(Doller::new(5)));
+        assert!(!Doller::new(5).equals(Doller::new(6)));
     }
 }
