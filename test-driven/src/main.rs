@@ -1,9 +1,15 @@
+pub trait Money<T> {
+    fn new(amount: i32) -> T;
+    fn times(&mut self, multiplier: i32) -> T;
+    fn equals(&self, money: T) -> bool;
+}
+
 #[derive(Debug, PartialEq)]
 struct Doller {
     amount: i32,
 }
 
-impl Doller {
+impl Money<Doller> for Doller {
     fn new(amount: i32) -> Doller {
         Doller { amount }
     }
@@ -20,7 +26,7 @@ struct Franc {
     amount: i32,
 }
 
-impl Franc {
+impl Money<Franc> for Franc {
     fn new(amount: i32) -> Franc {
         Franc { amount }
     }
@@ -52,6 +58,8 @@ mod tests {
         assert!(Doller::new(5).equals(Doller::new(5)));
         // falseを評価したい場合はassert!マクロに渡す前に反転させる必要がある
         assert!(!Doller::new(5).equals(Doller::new(6)));
+        assert!(Franc::new(5).equals(Franc::new(5)));
+        assert!(!Franc::new(5).equals(Franc::new(6)));
     }
 
     #[test]
