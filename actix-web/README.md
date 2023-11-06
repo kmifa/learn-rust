@@ -13,3 +13,6 @@ cargo watch -x run
 ```
 cargo watch -x check -x test
 ```
+
+todo
+- 分割する
