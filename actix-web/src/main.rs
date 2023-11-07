@@ -1,4 +1,5 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
 // This struct represents state
@@ -8,6 +9,13 @@ struct AppState {
 
 struct AppStateWithCounter {
     counter: Mutex<i32>, // <- Mutex is necessary to mutate safely across threads
+}
+
+#[derive(Serialize, Deserialize)]
+struct Users {
+    id: i32,
+    name: String,
+    age: i32,
 }
 
 async fn index_with_state(data: web::Data<AppStateWithCounter>) -> String {
@@ -38,6 +46,28 @@ async fn manual_hello() -> impl Responder {
     HttpResponse::Ok().body("Hey there!")
 }
 
+#[get("users")]
+async fn show_users() -> impl Responder {
+    let users = vec![
+        Users {
+            id: 1,
+            name: "Taro".to_string(),
+            age: 20,
+        },
+        Users {
+            id: 2,
+            name: "Jiro".to_string(),
+            age: 21,
+        },
+        Users {
+            id: 3,
+            name: "Saburo".to_string(),
+            age: 22,
+        },
+    ];
+    HttpResponse::Ok().json(users)
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let counter = web::Data::new(AppStateWithCounter {
@@ -45,6 +75,7 @@ async fn main() -> std::io::Result<()> {
     });
 
     HttpServer::new(move || {
+        let scope = web::scope("/api").service(show_users);
         App::new()
             .app_data(web::Data::new(AppState {
                 app_name: String::from("Actix Web"),
@@ -54,6 +85,7 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             // .service(hello)
             .service(echo)
+            .service(scope)
             .route("/hey", web::get().to(manual_hello))
             .route("index_with_state", web::get().to(index_with_state))
     })

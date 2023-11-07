@@ -134,6 +134,7 @@ name = "actix-web"
 version = "0.1.0"
 dependencies = [
  "actix-web 4.4.0",
+ "serde",
 ]
 
 [[package]]
