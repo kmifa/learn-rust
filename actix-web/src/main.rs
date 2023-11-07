@@ -59,11 +59,6 @@ async fn show_users() -> impl Responder {
             name: "Jiro".to_string(),
             age: 21,
         },
-        Users {
-            id: 3,
-            name: "Saburo".to_string(),
-            age: 22,
-        },
     ];
     HttpResponse::Ok().json(users)
 }
@@ -198,5 +193,20 @@ mod tests {
         assert_eq!(to_bytes(response_body).await?, r##"Request number: 2"##);
 
         Ok(())
+    }
+
+    #[actix_web::test]
+    async fn test_scope_api() {
+        let scope = web::scope("/api").service(show_users);
+        let app = test::init_service(App::new().service(scope)).await;
+
+        let req = test::TestRequest::get().uri("/api/users").to_request();
+        let resp = test::call_service(&app, req).await;
+
+        let body_bytes = to_bytes(resp.into_body()).await.unwrap();
+        assert_eq!(
+            body_bytes,
+            r#"[{"id":1,"name":"Taro","age":20},{"id":2,"name":"Jiro","age":21}]"#
+        );
     }
 }
