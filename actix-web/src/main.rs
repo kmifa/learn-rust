@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, middleware, post, web, App, HttpResponse, HttpServer, Responder};
 use std::sync::Mutex;
 
 mod get;
@@ -33,9 +33,12 @@ async fn echo(req_body: String) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     let counter = web::Data::new(AppStateWithCounter {
         counter: Mutex::new(0),
     });
+
+    log::info!("starting HTTP server at http://localhost:9999");
 
     HttpServer::new(move || {
         App::new()
@@ -48,8 +51,9 @@ async fn main() -> std::io::Result<()> {
             // .service(hello)
             .service(echo)
             .route("index_with_state", web::get().to(index_with_state))
+            .wrap(middleware::Logger::default())
     })
-    .bind(("127.0.0.1", 8081))?
+    .bind(("127.0.0.1", 9999))?
     .run()
     .await
 }
