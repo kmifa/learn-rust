@@ -1,4 +1,4 @@
-use actix_web::{get, web, HttpResponse, Responder};
+use actix_web::{get, web, HttpResponse, Responder, Result};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -34,10 +34,17 @@ async fn show_users() -> impl Responder {
     HttpResponse::Ok().json(users)
 }
 
+#[get("/user/{user_id}/{friend}")] // <- define path parameters
+async fn user_friend(path: web::Path<(u32, String)>) -> Result<String> {
+    let (user_id, friend) = path.into_inner();
+    Ok(format!("Welcome {}, user_id {}!", friend, user_id))
+}
+
 pub fn get_config(cfg: &mut web::ServiceConfig) {
     let scope = web::scope("/get")
         .service(hello)
         .service(show_users)
+        .service(user_friend)
         .route("hey", web::get().to(manual_hello));
 
     cfg.service(
@@ -97,5 +104,19 @@ mod tests {
             body_bytes,
             r#"[{"id":1,"name":"Taro","age":20},{"id":2,"name":"Jiro","age":21}]"#
         );
+    }
+
+    #[actix_web::test]
+    async fn test_user_friend() {
+        let scope = web::scope("/get").service(user_friend);
+        let app = test::init_service(App::new().service(scope)).await;
+
+        let req = test::TestRequest::get()
+            .uri("/get/user/1/hanako")
+            .to_request();
+        let resp = test::call_service(&app, req).await;
+
+        let body_bytes = to_bytes(resp.into_body()).await.unwrap();
+        assert_eq!(body_bytes, r#"Welcome hanako, user_id 1!"#);
     }
 }
