@@ -1,5 +1,5 @@
 fn main() {
-    nlp_02();
+    nlp_03();
 }
 
 fn nlp_00() {
@@ -27,4 +27,15 @@ fn nlp_02() {
 
     println!("{}", re);
     assert_eq!(re, "パタトクカシーー");
+}
+
+fn nlp_03() {
+    let str = "Now I need a drink, alcoholic of course, after the heavy lectures involving quantum mechanics.";
+    let re = str
+        .split_whitespace()
+        .map(|s| s.chars().nth(0).unwrap())
+        .collect::<String>();
+    // let s = re.concat::<Chars>();
+    println!("{:?}", re);
+    assert_eq!(re, "NInadaocathliqm")
 }
