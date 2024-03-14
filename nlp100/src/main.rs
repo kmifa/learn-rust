@@ -1,5 +1,5 @@
 fn main() {
-    nlp_03();
+    nlp_04();
 }
 
 fn nlp_00() {
@@ -38,4 +38,22 @@ fn nlp_03() {
     // let s = re.concat::<Chars>();
     println!("{:?}", re);
     assert_eq!(re, "NInadaocathliqm")
+}
+
+fn nlp_04() {
+    let str = "Hi He Lied Because Boron Could Not Oxidize Fluorine. New Nations Might Also Sign Peace Security Clause. Arthur King Can.";
+
+    let re = str
+        .split_whitespace()
+        .enumerate()
+        .map(|(i, s)| {
+            let mut n = 1;
+            if [1, 5, 6, 7, 8, 9, 15, 16, 19].contains(&i) {
+                n = 2;
+            }
+            (s.chars().take(n).collect::<String>(), i)
+        })
+        .collect::<Vec<_>>();
+
+    println!("{:?}", re);
 }
