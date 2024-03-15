@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "name": "Chip",
+    "category": "cats",
+    "age": 4,
+    "created_at": "2020-09-01T12:00:00Z"
+  },
+  {
+    "id": 2,
+    "name": "Dale",
+    "category": "cats",
+    "age": 4,
+    "created_at": "2020-09-01T12:00:00Z"
+  },
+  {
+    "id": 3,
+    "name": "Gadget",
+    "category": "cats",
+    "age": 4,
+    "created_at": "2020-09-01T12:00:00Z"
+  },
+  {
+    "id": 4,
+    "name": "Monterey Jack",
+    "category": "cats",
+    "age": 4,
+    "created_at": "2020-09-01T12:00:00Z"
+  },
+  {
+    "id": 5,
+    "name": "Zipper",
+    "category": "cats",
+    "age": 4,
+    "created_at": "2020-09-01T12:00:00Z"
+  }
+]
