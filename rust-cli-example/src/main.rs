@@ -12,7 +12,13 @@ use crossterm::{
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use tui::{backend::CrosstermBackend, Terminal};
+use tui::{
+    backend::CrosstermBackend,
+    layout::{Alignment, Constraint, Direction, Layout},
+    style::{Color, Style},
+    widgets::{Block, BorderType, Borders, Paragraph},
+    Terminal,
+};
 
 const DB_PATH: &str = "./data/db.json";
 
@@ -88,6 +94,40 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
+
+    let menu_titles = vec!["Home", "Pets", "Add", "Delete", "Quit"];
+    let mut active_menu_item = MenuItem::Home;
+
+    // TUIで使用される矩形のレイアウト・プリミティブで、ウィジェットのレンダリング位置を定義するために使用される
+    loop {
+        terminal.draw(|rect| {
+            let size = rect.size();
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .margin(2)
+                .constraints(
+                    [
+                        Constraint::Length(3),
+                        Constraint::Min(2),
+                        Constraint::Length(3),
+                    ]
+                    .as_ref(),
+                )
+                .split(size);
+
+            let copyright = Paragraph::new("pet-CLI 2020 - all rights reserved")
+                .style(Style::default().fg(Color::LightCyan))
+                .alignment(Alignment::Center)
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .style(Style::default().fg(Color::White))
+                        .title("Copyright")
+                        .border_type(BorderType::Plain),
+                );
+            rect.render_widget(copyright, chunks[2])
+        });
+    }
 
     return Ok(());
 }
