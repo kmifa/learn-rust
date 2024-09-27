@@ -1,5 +1,6 @@
 mod add;
 mod task;
+pub mod util;
 use add::load_tasks;
 use clap::{Parser, Subcommand};
 use task::{TaskStatus, Tasks};
@@ -93,17 +94,17 @@ fn main() {
         Commands::Delete { id } => {
             println!("Deleting task {}", id);
             // タスクを削除する処理
-            a.delete(&(*id as i32));
+            a.delete(*id as i32);
         }
         Commands::MarkInProgress { id } => {
             println!("Marking task {} as in progress", id);
             // タスクを進行中にする処理
-            a.mark_in_progress(&(*id as i32));
+            a.mark_in_progress(*id as i32);
         }
         Commands::MarkDone { id } => {
             println!("Marking task {} as done", id);
             // タスクを完了にする処理
-            a.mark_done(&(*id as i32));
+            a.mark_done(*id as i32);
         }
         Commands::List { status } => {
             match status {

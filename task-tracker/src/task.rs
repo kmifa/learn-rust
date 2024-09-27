@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::add::save_tasks;
+use crate::{
+    add::save_tasks,
+    util::{println_error, println_error_with_id, println_success},
+};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Tasks {
@@ -61,7 +64,7 @@ impl Tasks {
         );
         self.tasks.push(new_task);
         save_tasks(&self.tasks);
-        println!("Task added successfully (ID: {})", id);
+        println_success("Task added successfully!", id);
     }
 
     pub fn update(&mut self, id: i32, task_name: &String) {
@@ -71,54 +74,54 @@ impl Tasks {
                 t.description = task_name.to_string();
                 t.updated_at = "2021-07-01".to_string();
                 save_tasks(&self.tasks);
-                println!("Task updated successfully (ID: {})", id);
+                println_success("Task updated successfully!", id);
             }
             None => {
-                println!("Task not found (ID: {})", id);
+                println_error_with_id("Task not found", id);
             }
         }
     }
 
-    pub fn delete(&mut self, id: &i32) {
-        let task = self.tasks.iter().position(|t| &t.id == id);
+    pub fn delete(&mut self, id: i32) {
+        let task = self.tasks.iter().position(|t| t.id == id);
         match task {
             Some(i) => {
                 self.tasks.remove(i);
                 save_tasks(&self.tasks);
-                println!("Task deleted successfully (ID: {})", id);
+                println_success("Task deleted successfully!", id);
             }
             None => {
-                println!("Task not found (ID: {})", id);
+                println_error_with_id("Task not found", id);
             }
         }
     }
 
-    pub fn mark_in_progress(&mut self, id: &i32) {
-        let task = self.tasks.iter_mut().find(|t| &t.id == id);
+    pub fn mark_in_progress(&mut self, id: i32) {
+        let task = self.tasks.iter_mut().find(|t| t.id == id);
         match task {
             Some(t) => {
                 t.status = TaskStatus::InProgress;
                 t.updated_at = "2021-07-01".to_string();
                 save_tasks(&self.tasks);
-                println!("Task marked as in progress (ID: {})", id);
+                println_success("Task marked as in progress", id);
             }
             None => {
-                println!("Task not found (ID: {})", id);
+                println_error_with_id("Task not found", id);
             }
         }
     }
 
-    pub fn mark_done(&mut self, id: &i32) {
-        let task = self.tasks.iter_mut().find(|t| &t.id == id);
+    pub fn mark_done(&mut self, id: i32) {
+        let task = self.tasks.iter_mut().find(|t| t.id == id);
         match task {
             Some(t) => {
                 t.status = TaskStatus::Done;
                 t.updated_at = "2021-07-01".to_string();
                 save_tasks(&self.tasks);
-                println!("Task marked as done (ID: {})", id);
+                println_success("Task marked as done", id);
             }
             None => {
-                println!("Task not found (ID: {})", id);
+                println_error_with_id("Task not found", id);
             }
         }
     }
@@ -132,7 +135,7 @@ impl Tasks {
                     .filter(|t| t.status == TaskStatus::Done)
                     .collect();
                 if done_tasks.is_empty() {
-                    println!("No completed tasks found");
+                    println_error("No completed tasks found");
                 } else {
                     for task in done_tasks {
                         println!("{:?}", task);
@@ -146,7 +149,7 @@ impl Tasks {
                     .filter(|t| t.status == TaskStatus::Todo)
                     .collect();
                 if todo_tasks.is_empty() {
-                    println!("No pending tasks found");
+                    println_error("No todo tasks found");
                 } else {
                     for task in todo_tasks {
                         println!("{:?}", task);
@@ -160,7 +163,7 @@ impl Tasks {
                     .filter(|t| t.status == TaskStatus::InProgress)
                     .collect();
                 if in_progress_tasks.is_empty() {
-                    println!("No in-progress tasks found");
+                    println_error("No in-progress tasks found");
                 } else {
                     for task in in_progress_tasks {
                         println!("{:?}", task);
@@ -172,11 +175,79 @@ impl Tasks {
 
     pub fn list_all_tasks(&self) {
         if self.tasks.is_empty() {
-            println!("No tasks found");
+            println_error("No tasks found");
         } else {
             for task in &self.tasks {
                 println!("{:?}", task);
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add_task() {
+        let mut tasks = Tasks::new(Vec::new());
+        tasks.add(&"Test task".to_string());
+        assert_eq!(tasks.len(), 1);
+    }
+
+    #[test]
+    fn test_update_task() {
+        let mut tasks = Tasks::new(Vec::new());
+        tasks.add(&"Test task".to_string());
+        tasks.update(1, &"Updated task".to_string());
+        assert_eq!(tasks.tasks[0].description, "Updated task");
+    }
+
+    #[test]
+    fn test_delete_task() {
+        let mut tasks = Tasks::new(Vec::new());
+        tasks.add(&"Test task".to_string());
+        tasks.delete(1);
+        assert_eq!(tasks.len(), 0);
+    }
+
+    #[test]
+    fn test_mark_in_progress() {
+        let mut tasks = Tasks::new(Vec::new());
+        tasks.add(&"Test task".to_string());
+        tasks.mark_in_progress(1);
+        assert_eq!(tasks.tasks[0].status, TaskStatus::InProgress);
+    }
+
+    #[test]
+    fn test_mark_done() {
+        let mut tasks = Tasks::new(Vec::new());
+        tasks.add(&"Test task".to_string());
+        tasks.mark_done(1);
+        assert_eq!(tasks.tasks[0].status, TaskStatus::Done);
+    }
+
+    #[test]
+    fn test_list_status_task() {
+        let mut tasks = Tasks::new(Vec::new());
+        tasks.add(&"Test task".to_string());
+        tasks.mark_done(1);
+        tasks.add(&"Test task 2".to_string());
+        tasks.mark_in_progress(2);
+        tasks.add(&"Test task 3".to_string());
+        tasks.mark_in_progress(3);
+        tasks.list_status_task(TaskStatus::Done);
+        tasks.list_status_task(TaskStatus::InProgress);
+        tasks.list_status_task(TaskStatus::Todo);
+    }
+
+    #[test]
+    fn test_list_all_tasks() {
+        let mut tasks = Tasks::new(Vec::new());
+        tasks.add(&"Test task".to_string());
+        tasks.add(&"Test task 2".to_string());
+        tasks.add(&"Test task 3".to_string());
+        tasks.list_all_tasks();
+        assert_eq!(tasks.len(), 3);
     }
 }
