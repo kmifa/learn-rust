@@ -53,80 +53,88 @@ impl Tasks {
         self.tasks.len()
     }
 
-    pub fn add(&mut self, task_name: &String) {
+    pub fn add(&mut self, task_name: &String, created_at: String) -> (&Vec<Task>, i32) {
         let id = self.len() as i32 + 1;
         let new_task = Task::new(
             id,
             task_name.to_string(),
             TaskStatus::Todo,
-            "2021-07-01".to_string(),
-            "2021-07-01".to_string(),
+            created_at.clone(),
+            created_at.clone(),
         );
         self.tasks.push(new_task);
-        save_tasks(&self.tasks);
-        println_success("Task added successfully!", id);
+        (&self.tasks, id)
     }
 
-    pub fn update(&mut self, id: i32, task_name: &String) {
+    pub fn update(
+        &mut self,
+        id: i32,
+        task_name: &String,
+        updated_at: String,
+    ) -> Result<&Vec<Task>, String> {
         let task = self.tasks.iter_mut().find(|t| t.id == id);
         match task {
             Some(t) => {
                 t.description = task_name.to_string();
-                t.updated_at = "2021-07-01".to_string();
-                save_tasks(&self.tasks);
-                println_success("Task updated successfully!", id);
+                t.updated_at = updated_at;
+                Ok(&self.tasks)
             }
-            None => {
-                println_error_with_id("Task not found", id);
-            }
+            None => Err(format!("Task with ID {} not found", id)),
         }
     }
 
-    pub fn delete(&mut self, id: i32) {
+    pub fn delete(&mut self, id: i32) -> Result<&Vec<Task>, String> {
         let task = self.tasks.iter().position(|t| t.id == id);
         match task {
             Some(i) => {
                 self.tasks.remove(i);
-                save_tasks(&self.tasks);
-                println_success("Task deleted successfully!", id);
+                Ok(&self.tasks)
             }
-            None => {
-                println_error_with_id("Task not found", id);
-            }
+            None => Err(format!("Task with ID {} not found", id)),
         }
     }
 
-    pub fn mark_in_progress(&mut self, id: i32) {
+    pub fn mark_todo(&mut self, id: i32, updated_at: String) -> Result<&Vec<Task>, String> {
+        let task = self.tasks.iter_mut().find(|t| t.id == id);
+        match task {
+            Some(t) => {
+                t.status = TaskStatus::Todo;
+                t.updated_at = updated_at;
+                Ok(&self.tasks)
+            }
+            None => Err(format!("Task with ID {} not found", id)),
+        }
+    }
+
+    pub fn mark_in_progress(&mut self, id: i32, updated_at: String) -> Result<&Vec<Task>, String> {
         let task = self.tasks.iter_mut().find(|t| t.id == id);
         match task {
             Some(t) => {
                 t.status = TaskStatus::InProgress;
-                t.updated_at = "2021-07-01".to_string();
+                t.updated_at = updated_at;
                 save_tasks(&self.tasks);
                 println_success("Task marked as in progress", id);
+                Ok(&self.tasks)
             }
-            None => {
-                println_error_with_id("Task not found", id);
-            }
+            None => Err(format!("Task with ID {} not found", id)),
         }
     }
 
-    pub fn mark_done(&mut self, id: i32) {
+    pub fn mark_done(&mut self, id: i32, updated_at: String) -> Result<&Vec<Task>, String> {
         let task = self.tasks.iter_mut().find(|t| t.id == id);
         match task {
             Some(t) => {
                 t.status = TaskStatus::Done;
-                t.updated_at = "2021-07-01".to_string();
+                t.updated_at = updated_at;
                 save_tasks(&self.tasks);
                 println_success("Task marked as done", id);
+                Ok(&self.tasks)
             }
-            None => {
-                println_error_with_id("Task not found", id);
-            }
+            None => Err(format!("Task with ID {} not found", id)),
         }
     }
 
-    pub fn list_status_task(&self, status: TaskStatus) {
+    pub fn list_status_task(&self, status: TaskStatus) -> Result<Vec<&Task>, &str> {
         match status {
             TaskStatus::Done => {
                 let done_tasks: Vec<&Task> = self
@@ -135,11 +143,9 @@ impl Tasks {
                     .filter(|t| t.status == TaskStatus::Done)
                     .collect();
                 if done_tasks.is_empty() {
-                    println_error("No completed tasks found");
+                    Err("No completed tasks found")
                 } else {
-                    for task in done_tasks {
-                        println!("{:?}", task);
-                    }
+                    Ok(done_tasks)
                 }
             }
             TaskStatus::Todo => {
@@ -149,11 +155,9 @@ impl Tasks {
                     .filter(|t| t.status == TaskStatus::Todo)
                     .collect();
                 if todo_tasks.is_empty() {
-                    println_error("No todo tasks found");
+                    Err("No todo tasks found")
                 } else {
-                    for task in todo_tasks {
-                        println!("{:?}", task);
-                    }
+                    Ok(todo_tasks)
                 }
             }
             TaskStatus::InProgress => {
@@ -163,11 +167,9 @@ impl Tasks {
                     .filter(|t| t.status == TaskStatus::InProgress)
                     .collect();
                 if in_progress_tasks.is_empty() {
-                    println_error("No in-progress tasks found");
+                    Err("No in-progress tasks found")
                 } else {
-                    for task in in_progress_tasks {
-                        println!("{:?}", task);
-                    }
+                    Ok(in_progress_tasks)
                 }
             }
         }
@@ -191,62 +193,121 @@ mod tests {
     #[test]
     fn test_add_task() {
         let mut tasks = Tasks::new(Vec::new());
-        tasks.add(&"Test task".to_string());
-        assert_eq!(tasks.len(), 1);
+        let t = tasks.add(&"Test task".to_string(), "2021-07-01".to_string());
+        assert_eq!(t.0[0].id, 1);
+        assert_eq!(t.0[0].description, "Test task");
+        assert_eq!(t.0[0].status, TaskStatus::Todo);
+        assert_eq!(t.0[0].created_at, "2021-07-01");
+        assert_eq!(t.0[0].updated_at, "2021-07-01");
+        assert!(t.0.len() == 1);
+        assert_eq!(t.1, 1);
     }
 
     #[test]
-    fn test_update_task() {
+    fn test_update_task_success() {
         let mut tasks = Tasks::new(Vec::new());
-        tasks.add(&"Test task".to_string());
-        tasks.update(1, &"Updated task".to_string());
-        assert_eq!(tasks.tasks[0].description, "Updated task");
+        tasks.add(&"Test task".to_string(), "2021-07-01".to_string());
+        let t = tasks.update(1, &"Updated task".to_string(), "2021-07-02".to_string());
+        let result = t.unwrap();
+        assert_eq!(result[0].description, "Updated task");
+        assert_eq!(result[0].updated_at, "2021-07-02");
+    }
+
+    #[test]
+    fn test_update_non_existing_task() {
+        let mut tasks = Tasks::new(Vec::new());
+        tasks.add(&"Test task".to_string(), "2021-07-01".to_string());
+        let result = tasks.update(2, &"Updated task".to_string(), "2021-07-02".to_string());
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Task with ID 2 not found");
     }
 
     #[test]
     fn test_delete_task() {
         let mut tasks = Tasks::new(Vec::new());
-        tasks.add(&"Test task".to_string());
-        tasks.delete(1);
-        assert_eq!(tasks.len(), 0);
+        tasks.add(&"Test task".to_string(), "2021-07-01".to_string());
+        let result = tasks.delete(1);
+        assert_eq!(result.unwrap().len(), 0)
+    }
+
+    #[test]
+    fn test_delete_non_existing_task() {
+        let mut tasks = Tasks::new(Vec::new());
+        tasks.add(&"Test task".to_string(), "2021-07-01".to_string());
+        let result = tasks.delete(2);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Task with ID 2 not found");
+    }
+
+    #[test]
+    fn test_mark_todo() {
+        let mut tasks = Tasks::new(Vec::new());
+        tasks.add(&"Test task".to_string(), "2021-07-01".to_string());
+        let result = tasks.mark_todo(1, "2021-07-01".to_string());
+        assert_eq!(result.unwrap()[0].status, TaskStatus::Todo);
+    }
+
+    #[test]
+    fn test_mark_todo_non_existing_task() {
+        let mut tasks = Tasks::new(Vec::new());
+        tasks.add(&"Test task".to_string(), "2021-07-01".to_string());
+        let result = tasks.mark_todo(2, "2021-07-01".to_string());
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Task with ID 2 not found");
     }
 
     #[test]
     fn test_mark_in_progress() {
         let mut tasks = Tasks::new(Vec::new());
-        tasks.add(&"Test task".to_string());
-        tasks.mark_in_progress(1);
-        assert_eq!(tasks.tasks[0].status, TaskStatus::InProgress);
+        tasks.add(&"Test task".to_string(), "2021-07-01".to_string());
+        let result = tasks.mark_in_progress(1, "2021-07-01".to_string());
+        assert_eq!(result.unwrap()[0].status, TaskStatus::InProgress);
+    }
+
+    #[test]
+    fn test_mark_in_progress_non_existing_task() {
+        let mut tasks = Tasks::new(Vec::new());
+        tasks.add(&"Test task".to_string(), "2021-07-01".to_string());
+        let result = tasks.mark_in_progress(2, "2021-07-01".to_string());
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Task with ID 2 not found");
     }
 
     #[test]
     fn test_mark_done() {
         let mut tasks = Tasks::new(Vec::new());
-        tasks.add(&"Test task".to_string());
-        tasks.mark_done(1);
-        assert_eq!(tasks.tasks[0].status, TaskStatus::Done);
+        tasks.add(&"Test task".to_string(), "2021-07-01".to_string());
+        let result = tasks.mark_done(1, "2021-07-01".to_string());
+        assert_eq!(result.unwrap()[0].status, TaskStatus::Done);
     }
 
     #[test]
-    fn test_list_status_task() {
+    fn test_mark_done_non_existing_task() {
         let mut tasks = Tasks::new(Vec::new());
-        tasks.add(&"Test task".to_string());
-        tasks.mark_done(1);
-        tasks.add(&"Test task 2".to_string());
-        tasks.mark_in_progress(2);
-        tasks.add(&"Test task 3".to_string());
-        tasks.mark_in_progress(3);
-        tasks.list_status_task(TaskStatus::Done);
-        tasks.list_status_task(TaskStatus::InProgress);
-        tasks.list_status_task(TaskStatus::Todo);
+        tasks.add(&"Test task".to_string(), "2021-07-01".to_string());
+        let result = tasks.mark_done(2, "2021-07-01".to_string());
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Task with ID 2 not found");
+    }
+
+    #[test]
+    fn test_status_list_done_tasks() {
+        let mut tasks = Tasks::new(Vec::new());
+        tasks.add(&"Test task".to_string(), "2021-07-01".to_string());
+        tasks.add(&"Test task 2".to_string(), "2021-07-01".to_string());
+        tasks.add(&"Test task 3".to_string(), "2021-07-01".to_string());
+        tasks.mark_done(1, "2021-07-01".to_string()).unwrap();
+        tasks.mark_done(2, "2021-07-01".to_string()).unwrap();
+        let result = tasks.list_status_task(TaskStatus::Done).unwrap();
+        assert_eq!(result.len(), 2);
     }
 
     #[test]
     fn test_list_all_tasks() {
         let mut tasks = Tasks::new(Vec::new());
-        tasks.add(&"Test task".to_string());
-        tasks.add(&"Test task 2".to_string());
-        tasks.add(&"Test task 3".to_string());
+        tasks.add(&"Test task".to_string(), "2021-07-01".to_string());
+        tasks.add(&"Test task 2".to_string(), "2021-07-01".to_string());
+        tasks.add(&"Test task 3".to_string(), "2021-07-01".to_string());
         tasks.list_all_tasks();
         assert_eq!(tasks.len(), 3);
     }

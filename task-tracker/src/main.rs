@@ -1,9 +1,10 @@
 mod add;
 mod task;
 pub mod util;
-use add::load_tasks;
+use add::{load_tasks, save_tasks};
 use clap::{Parser, Subcommand};
 use task::{TaskStatus, Tasks};
+use util::{println_error, println_success};
 
 #[derive(Parser)]
 #[clap(
@@ -40,6 +41,11 @@ enum Commands {
         /// The task ID
         id: u32,
     },
+    /// Marking a task as to do
+    MarkTodo {
+        /// The task ID
+        id: u32,
+    },
     /// Marking a task as in progress
     MarkInProgress {
         /// The task ID
@@ -58,7 +64,7 @@ enum Commands {
     },
 }
 
-#[derive(Subcommand, PartialEq)]
+#[derive(Subcommand)]
 enum CommandTaskStatus {
     /// Show completed tasks
     Done,
@@ -78,57 +84,118 @@ fn main() {
     }
 
     let mut a = Tasks::new(load_tasks());
+    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
 
     // サブコマンドの解析
     match &args.command {
         Commands::Add { task } => {
-            println!("Adding task: {}", task);
-            // タスクを追加する処理
-            a.add(task);
+            let t = a.add(task, today);
+            save_tasks(t.0);
+            println_success("Task added successfully!", t.1);
         }
         Commands::Update { id, task } => {
-            println!("Updating task {}: {}", id, task);
-            // タスクを更新する処理
-            a.update(*id as i32, task);
-        }
-        Commands::Delete { id } => {
-            println!("Deleting task {}", id);
-            // タスクを削除する処理
-            a.delete(*id as i32);
-        }
-        Commands::MarkInProgress { id } => {
-            println!("Marking task {} as in progress", id);
-            // タスクを進行中にする処理
-            a.mark_in_progress(*id as i32);
-        }
-        Commands::MarkDone { id } => {
-            println!("Marking task {} as done", id);
-            // タスクを完了にする処理
-            a.mark_done(*id as i32);
-        }
-        Commands::List { status } => {
-            match status {
-                Some(CommandTaskStatus::Done) => {
-                    println!("Listing completed tasks");
-                    // 完了したタスクを表示する処理
-                    a.list_status_task(TaskStatus::Done);
+            let t = a.update(*id as i32, task, today);
+            match t {
+                Ok(v) => {
+                    save_tasks(v);
+                    println_success("Task updated successfully!", *id as i32);
                 }
-                Some(CommandTaskStatus::Todo) => {
-                    println!("Listing pending tasks");
-                    // 未完了のタスクを表示する処理
-                    a.list_status_task(TaskStatus::Todo);
-                }
-                Some(CommandTaskStatus::InProgress) => {
-                    println!("Listing in-progress tasks");
-                    // 進行中のタスクを表示する処理
-                    a.list_status_task(TaskStatus::InProgress);
-                }
-                None => {
-                    println!("Listing all tasks");
-                    // すべてのタスクを表示する処理
-                    a.list_all_tasks();
+                Err(e) => {
+                    println_error(&e);
                 }
             }
         }
+        Commands::Delete { id } => {
+            let t = a.delete(*id as i32);
+            match t {
+                Ok(v) => {
+                    save_tasks(v);
+                    println_success("Task deleted successfully!", *id as i32);
+                }
+                Err(e) => {
+                    println_error(&e);
+                }
+            }
+        }
+        Commands::MarkTodo { id } => {
+            let t = a.mark_todo(*id as i32, today);
+            match t {
+                Ok(v) => {
+                    save_tasks(v);
+                    println_success("Task deleted successfully!", *id as i32);
+                }
+                Err(e) => {
+                    println_error(&e);
+                }
+            }
+        }
+        Commands::MarkInProgress { id } => {
+            let t = a.mark_in_progress(*id as i32, today);
+            match t {
+                Ok(v) => {
+                    save_tasks(v);
+                    println_success("Task deleted successfully!", *id as i32);
+                }
+                Err(e) => {
+                    println_error(&e);
+                }
+            }
+        }
+        Commands::MarkDone { id } => {
+            let t = a.mark_done(*id as i32, today);
+            match t {
+                Ok(v) => {
+                    save_tasks(v);
+                    println_success("Task deleted successfully!", *id as i32);
+                }
+                Err(e) => {
+                    println_error(&e);
+                }
+            }
+        }
+        Commands::List { status } => match status {
+            Some(CommandTaskStatus::Done) => {
+                let t = a.list_status_task(TaskStatus::Done);
+                match t {
+                    Ok(v) => {
+                        for task in v {
+                            println!("{:?}", task);
+                        }
+                    }
+                    Err(e) => {
+                        println_error(e);
+                    }
+                }
+            }
+            Some(CommandTaskStatus::Todo) => {
+                let t = a.list_status_task(TaskStatus::Todo);
+                match t {
+                    Ok(v) => {
+                        for task in v {
+                            println!("{:?}", task);
+                        }
+                    }
+                    Err(e) => {
+                        println_error(e);
+                    }
+                }
+            }
+            Some(CommandTaskStatus::InProgress) => {
+                let t = a.list_status_task(TaskStatus::InProgress);
+                match t {
+                    Ok(v) => {
+                        for task in v {
+                            println!("{:?}", task);
+                        }
+                    }
+                    Err(e) => {
+                        println_error(e);
+                    }
+                }
+            }
+            None => {
+                a.list_all_tasks();
+            }
+        },
     }
 }
