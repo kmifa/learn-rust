@@ -10,20 +10,22 @@ Clone the repository and run the following command:
 
 ```bash
 $ git clone https://github.com/kmifa/learn-rust.git
-$ cd target/release
+$ cd task-tracker
 ```
 
 Run the following command to build and run the project:
 
 ```bash
 $ cargo build --release
+$ cd target/release
+
 ./task-tracker --help # To see the list of available commands
 
 # To add a task
-./task-tracker add "Buy groceries"
+./task-tracker add "work"
 
 # To update a task
-./task-tracker update 1 "Buy groceries and cook dinner"
+./task-tracker update 1 "study"
 
 # To delete a task
 ./task-tracker delete 1
