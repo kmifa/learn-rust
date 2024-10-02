@@ -1,44 +1,40 @@
 use std::{fs::File, path::Path};
 
 use crate::task::Task;
-use std::fs;
-use std::io::Write;
 
-const TASKS_FILE: &str = "tasks.json";
-
-pub fn load_tasks() -> Vec<Task> {
-    // tasks.jsonを読み込む
-    if Path::new(TASKS_FILE).exists() {
-        let file = File::open(TASKS_FILE).unwrap();
+pub fn load_tasks(file_name: &str) -> Vec<Task> {
+    if Path::new(file_name).exists() {
+        let file = File::open(file_name).unwrap();
         let reader = std::io::BufReader::new(file);
         let des: Result<Vec<Task>, serde_json::Error> = serde_json::from_reader(reader);
 
         des.unwrap_or_default()
     } else {
-        // tasks.jsonが存在しない場合
         Vec::new()
     }
 }
 
-pub fn save_tasks(tasks: &Vec<Task>) {
-    // tasks.jsonに書き込む
-    let file = File::create(TASKS_FILE).unwrap();
+pub fn save_tasks(file_name: &str, tasks: &Vec<Task>) {
+    let file = File::create(file_name).unwrap();
     serde_json::to_writer_pretty(file, tasks).unwrap();
 }
 
 #[cfg(test)]
 mod tests {
     use crate::task::{TaskStatus, Tasks};
+    use std::fs;
 
     use super::*;
 
-    fn setup_test_file(tasks: &Vec<Task>) {
-        save_tasks(tasks);
+    const TEST_TASKS_FILE: &str = "test_tasks.json";
+
+    fn setup_test_file(file_name: &str, tasks: &Vec<Task>) {
+        save_tasks(file_name, tasks);
     }
 
     fn cleanup_test_file() {
-        if Path::new(TASKS_FILE).exists() {
-            fs::remove_file(TASKS_FILE).unwrap();
+        if Path::new(TEST_TASKS_FILE).exists() {
+            fs::remove_file(TEST_TASKS_FILE).unwrap();
         }
     }
 
@@ -70,9 +66,9 @@ mod tests {
             ],
         };
 
-        setup_test_file(&test_content.tasks);
+        setup_test_file(TEST_TASKS_FILE, &test_content.tasks);
 
-        let tasks = load_tasks();
+        let tasks = load_tasks(TEST_TASKS_FILE);
         assert_eq!(tasks.len(), 3);
         assert_eq!(tasks[0].description, "test1");
         assert_eq!(tasks[0].status, TaskStatus::Todo);
@@ -84,9 +80,14 @@ mod tests {
 
     #[test]
     fn test_load_tasks_with_non_existing_file() {
-        cleanup_test_file();
+        let voidfile = "voidfile.json";
+        setup_test_file(voidfile, &Vec::new());
 
-        let tasks = load_tasks();
-        assert!(tasks.is_empty());
+        let tasks = load_tasks(voidfile);
+        assert_eq!(tasks.len(), 0);
+
+        if Path::new(voidfile).exists() {
+            fs::remove_file(voidfile).unwrap();
+        }
     }
 }

@@ -1,9 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    add::save_tasks,
-    util::{println_error, println_error_with_id, println_success},
-};
+use crate::util::println_error;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Tasks {
@@ -112,8 +109,6 @@ impl Tasks {
             Some(t) => {
                 t.status = TaskStatus::InProgress;
                 t.updated_at = updated_at;
-                save_tasks(&self.tasks);
-                println_success("Task marked as in progress", id);
                 Ok(&self.tasks)
             }
             None => Err(format!("Task with ID {} not found", id)),
@@ -126,8 +121,6 @@ impl Tasks {
             Some(t) => {
                 t.status = TaskStatus::Done;
                 t.updated_at = updated_at;
-                save_tasks(&self.tasks);
-                println_success("Task marked as done", id);
                 Ok(&self.tasks)
             }
             None => Err(format!("Task with ID {} not found", id)),

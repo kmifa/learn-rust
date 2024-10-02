@@ -1,8 +1,8 @@
-mod add;
+mod io;
 mod task;
 pub mod util;
-use add::{load_tasks, save_tasks};
 use clap::{Parser, Subcommand};
+use io::{load_tasks, save_tasks};
 use task::{TaskStatus, Tasks};
 use util::{println_error, println_success};
 
@@ -74,6 +74,8 @@ enum CommandTaskStatus {
     InProgress,
 }
 
+const TASKS_FILE: &str = "tasks.json";
+
 fn main() {
     // コマンドライン引数を解析
     let args = Cli::parse();
@@ -83,21 +85,21 @@ fn main() {
         println!("Verbose mode enabled");
     }
 
-    let mut a = Tasks::new(load_tasks());
+    let mut a = Tasks::new(load_tasks(TASKS_FILE));
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
 
     // サブコマンドの解析
     match &args.command {
         Commands::Add { task } => {
             let t = a.add(task, today);
-            save_tasks(t.0);
+            save_tasks(TASKS_FILE, t.0);
             println_success("Task added successfully!", t.1);
         }
         Commands::Update { id, task } => {
             let t = a.update(*id as i32, task, today);
             match t {
                 Ok(v) => {
-                    save_tasks(v);
+                    save_tasks(TASKS_FILE, v);
                     println_success("Task updated successfully!", *id as i32);
                 }
                 Err(e) => {
@@ -109,7 +111,7 @@ fn main() {
             let t = a.delete(*id as i32);
             match t {
                 Ok(v) => {
-                    save_tasks(v);
+                    save_tasks(TASKS_FILE, v);
                     println_success("Task deleted successfully!", *id as i32);
                 }
                 Err(e) => {
@@ -121,8 +123,8 @@ fn main() {
             let t = a.mark_todo(*id as i32, today);
             match t {
                 Ok(v) => {
-                    save_tasks(v);
-                    println_success("Task deleted successfully!", *id as i32);
+                    save_tasks(TASKS_FILE, v);
+                    println_success("Task successfully marked as todo!", *id as i32);
                 }
                 Err(e) => {
                     println_error(&e);
@@ -133,8 +135,8 @@ fn main() {
             let t = a.mark_in_progress(*id as i32, today);
             match t {
                 Ok(v) => {
-                    save_tasks(v);
-                    println_success("Task deleted successfully!", *id as i32);
+                    save_tasks(TASKS_FILE, v);
+                    println_success("Task successfully marked as in progress!", *id as i32);
                 }
                 Err(e) => {
                     println_error(&e);
@@ -145,8 +147,8 @@ fn main() {
             let t = a.mark_done(*id as i32, today);
             match t {
                 Ok(v) => {
-                    save_tasks(v);
-                    println_success("Task deleted successfully!", *id as i32);
+                    save_tasks(TASKS_FILE, v);
+                    println_success("Task successfully marked as done!", *id as i32);
                 }
                 Err(e) => {
                     println_error(&e);
