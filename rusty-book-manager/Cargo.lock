@@ -8,11 +8,14 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "bcrypt",
+ "chrono",
  "derive-new",
  "kernel",
+ "redis",
+ "secrecy",
  "shared",
  "sqlx",
- "uuid",
 ]
 
 [[package]]
