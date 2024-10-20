@@ -67,6 +67,21 @@ impl ExpencesList {
             println!("Total expenses: ${}", total);
         }
     }
+
+    pub fn update(&mut self, id: i32, description: String, amount: i32) {
+        let task = self.expences.iter_mut().find(|t| t.id == id);
+        match task {
+            Some(t) => {
+                t.description = description;
+                t.amount = amount;
+                save_expence(&self.expences);
+                println_success("Expense updated successfully!", id);
+            }
+            None => {
+                println_error_with_id("Expense not found", id);
+            }
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -85,5 +100,49 @@ impl Expence {
             description,
             amount,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add_expence() {
+        let mut expences = ExpencesList::new(Vec::new());
+        expences.add("2021-08-01".to_string(), "Lunch".to_string(), 20);
+        assert_eq!(expences.len(), 1);
+    }
+
+    #[test]
+    fn test_delete_expence() {
+        let mut expences = ExpencesList::new(Vec::new());
+        expences.add("2021-08-01".to_string(), "Lunch".to_string(), 20);
+        expences.delete(1);
+        assert_eq!(expences.len(), 0);
+    }
+
+    #[test]
+    fn test_list() {
+        let mut expences = ExpencesList::new(Vec::new());
+        expences.add("2021-08-01".to_string(), "Lunch".to_string(), 20);
+        expences.add("2021-08-02".to_string(), "Dinner".to_string(), 30);
+        expences.list();
+    }
+
+    #[test]
+    fn test_summary() {
+        let mut expences = ExpencesList::new(Vec::new());
+        expences.add("2021-08-01".to_string(), "Lunch".to_string(), 20);
+        expences.add("2021-08-02".to_string(), "Dinner".to_string(), 30);
+        expences.summary(&None);
+        expences.summary(&Some(8));
+    }
+
+    #[test]
+    fn test_update_expence() {
+        let mut expences = ExpencesList::new(Vec::new());
+        expences.add("2021-08-01".to_string(), "Lunch".to_string(), 20);
+        expences.update(1, "Dinner".to_string(), 30);
     }
 }

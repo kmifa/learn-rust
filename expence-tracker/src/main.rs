@@ -52,6 +52,21 @@ enum Commands {
         #[clap(short, long, help = "Specify the month to filter expenses (1-12)")]
         month: Option<i32>,
     },
+    Update {
+        /// The task ID
+        #[clap(short, long, help = "Update an expense by ID (e.g., --update 1)")]
+        id: i32,
+        /// The task description
+        #[clap(
+            short,
+            long,
+            help = "A brief description of the expense (e.g., 'Lunch')"
+        )]
+        description: String,
+        /// The task amount
+        #[clap(short, long, help = "The amount spent (e.g., 20.50)")]
+        amount: i32,
+    },
 }
 
 fn main() {
@@ -63,6 +78,7 @@ fn main() {
         println!("Verbose mode enabled");
     }
 
+    // タスクリストの初期化
     let mut a = ExpencesList::new(load_expence_list());
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
 
@@ -84,6 +100,13 @@ fn main() {
         }
         Commands::Summary { month } => {
             a.summary(month);
+        }
+        Commands::Update {
+            id,
+            description,
+            amount,
+        } => {
+            a.update(*id, description.to_string(), *amount);
         }
     }
 }
