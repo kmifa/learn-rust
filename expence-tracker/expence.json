@@ -1,8 +1,16 @@
 [
   {
-    "id": 3,
-    "date": "2024-10-20",
-    "description": "日本酒",
-    "amount": 20
+    "id": 1,
+    "date": "2024-10-01",
+    "description": "TEST",
+    "amount": 1000,
+    "category": "Food"
+  },
+  {
+    "id": 2,
+    "date": "2024-10-02",
+    "description": "Dinner",
+    "amount": 30,
+    "category": "Food"
   }
 ]

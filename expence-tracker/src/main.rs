@@ -1,8 +1,9 @@
 mod expence;
 pub mod util;
 use expence::ExpencesList;
-use io::load_expence_list;
+use io::{load_expence_list, load_limit_list};
 mod io;
+mod limit;
 
 use chrono::prelude::*;
 use clap::{Parser, Subcommand};
@@ -37,6 +38,8 @@ enum Commands {
         /// The task amount
         #[clap(short, long, help = "The amount spent (e.g., 20.50)")]
         amount: i32,
+        #[clap(short, long, help = "The date of the expense (e.g., 2021-08-01)")]
+        category: String,
     },
     /// Deleting a task
     Delete {
@@ -67,6 +70,28 @@ enum Commands {
         #[clap(short, long, help = "The amount spent (e.g., 20.50)")]
         amount: i32,
     },
+    AddLimit {
+        /// The limit amount
+        #[clap(short, long, help = "The limit amount (e.g., 100)")]
+        limit: i32,
+        /// The year-month
+        #[clap(short, long, help = "The year-month (e.g., 2021-08)")]
+        ym: String,
+    },
+    UpdateLimit {
+        /// The limit amount
+        #[clap(short, long, help = "The limit amount (e.g., 100)")]
+        limit: i32,
+        /// The year-month
+        #[clap(short, long, help = "The year-month (e.g., 2021-08)")]
+        ym: String,
+    },
+    DeleteLimit {
+        /// The limit index
+        #[clap(short, long, help = "Delete a limit by year-month (e.g., 2021-08)")]
+        ym: String,
+    },
+    Download {},
 }
 
 fn main() {
@@ -87,9 +112,15 @@ fn main() {
         Commands::Add {
             description,
             amount,
+            category,
         } => {
             // タスクを追加する処理
-            a.add(today, description.to_string(), *amount);
+            a.add(
+                today,
+                description.to_string(),
+                *amount,
+                category.to_string(),
+            );
         }
         Commands::Delete { id } => {
             // タスクを削除する処理
@@ -107,6 +138,21 @@ fn main() {
             amount,
         } => {
             a.update(*id, description.to_string(), *amount);
+        }
+        Commands::AddLimit { limit, ym } => {
+            let mut l = limit::LimitList::new(load_limit_list());
+            l.add(*limit, ym.to_string());
+        }
+        Commands::UpdateLimit { limit, ym } => {
+            let mut l = limit::LimitList::new(load_limit_list());
+            l.update(*limit, ym.to_string());
+        }
+        Commands::DeleteLimit { ym } => {
+            let mut l = limit::LimitList::new(load_limit_list());
+            l.delete(ym.to_string());
+        }
+        Commands::Download {} => {
+            io::download_csv();
         }
     }
 }
